@@ -4,6 +4,8 @@ import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
 
+import { gsap } from "gsap";
+
 const config = {
   controls: false,
   gui: true,
@@ -12,6 +14,8 @@ const config = {
 };
 
 let controls, geo, gui, guiRot;
+
+let tlGeo;
 
 // Instantiate a loader
 const loader = new GLTFLoader();
@@ -73,6 +77,46 @@ const onGuiRotChange = function () {
   );
 };
 
+const initAnims = function () {
+  tlGeo = gsap.timeline({
+    repeat: -1,
+    yoyo: true,
+  });
+  tlGeo.to(geo.rotation, { x: THREE.MathUtils.degToRad(90), duration: 1 });
+  tlGeo.to(geo.rotation, { y: THREE.MathUtils.degToRad(90), duration: 1 });
+  tlGeo.to(geo.rotation, { z: THREE.MathUtils.degToRad(360), duration: 1 });
+  tlGeo.to(camera.position, { z: 0, duration: 1 }, "move2");
+  tlGeo.to(
+    geo.rotation,
+    { z: THREE.MathUtils.degToRad(0), duration: 1 },
+    "move2"
+  );
+  tlGeo.to(
+    geo.rotation,
+    { x: THREE.MathUtils.degToRad(0), duration: 1 },
+    "move2"
+  );
+  tlGeo.to(
+    geo.rotation,
+    { y: THREE.MathUtils.degToRad(0), duration: 1 },
+    "move2"
+  );
+  tlGeo.to(geo.rotation, { x: THREE.MathUtils.degToRad(90), duration: 1 });
+  tlGeo.to(geo.rotation, { y: THREE.MathUtils.degToRad(90), duration: 1 });
+  tlGeo.to(geo.rotation, { z: THREE.MathUtils.degToRad(360), duration: 1 });
+  tlGeo.to(camera.position, { z: 2.5, duration: 1 });
+  tlGeo.to(geo.rotation, { x: 0, duration: 1 });
+  tlGeo.to(geo.rotation, { y: 0, duration: 1 });
+  tlGeo.to(geo.rotation, { z: 0, duration: 1 });
+  tlGeo.to(camera.position, { z: 2.5, duration: 1 }, "zoomOut");
+  tlGeo.to(
+    geo.rotation,
+    { x: THREE.MathUtils.degToRad(config.initRotX), duration: 1 },
+    "zoomOut"
+  );
+  tlGeo.to(camera.position, { z: -2, duration: 1 }, "zoomThrough");
+};
+
 const initGUI = function () {
   gui = new dat.GUI();
   if (!config.gui) {
@@ -119,6 +163,7 @@ loader.load(
     //gltf.asset; // Object
     console.log(geo);
     initGUI();
+    initAnims();
   },
   // called while loading is progressing
   function (xhr) {
