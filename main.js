@@ -2,12 +2,22 @@ import * as THREE from "three";
 import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
+import * as dat from "dat.gui";
+
+const config = {
+  controls: false,
+  gui: true,
+  camZ: 2.5,
+  initRotX: 210, //deg
+};
+
+let controls, geo, gui, guiRot;
 
 // Instantiate a loader
-var loader = new GLTFLoader();
+const loader = new GLTFLoader();
 
 // Optional: Provide a DRACOLoader instance to decode compressed mesh data
-var dracoLoader = new DRACOLoader();
+const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("THREE/examples/js/libs/draco/");
 loader.setDRACOLoader(dracoLoader);
 
@@ -50,13 +60,47 @@ directionalLight.add(
   )
 );
 
+const onControlsChange = function () {
+  console.log(controls.getAzimuthalAngle(), controls.getPolarAngle());
+};
+
+const onGuiRotChange = function () {
+  const { x, y, z } = guiRot;
+  geo.rotation.set(
+    THREE.MathUtils.degToRad(x),
+    THREE.MathUtils.degToRad(y),
+    THREE.MathUtils.degToRad(z)
+  );
+};
+
+const initGUI = function () {
+  gui = new dat.GUI();
+  if (!config.gui) {
+    gui.hide();
+  }
+  guiRot = {
+    x: 0,
+    y: 0,
+    z: 0,
+  };
+  const guiRotX = gui.add(guiRot, "x", 0, 359);
+  guiRotX.onChange(onGuiRotChange);
+  const guiRotY = gui.add(guiRot, "y", 0, 359);
+  guiRotY.onChange(onGuiRotChange);
+  const guiRotZ = gui.add(guiRot, "z", 0, 359);
+  guiRotZ.onChange(onGuiRotChange);
+
+  gui.add(camera.position, "z", -2, 5).name("cam z");
+};
+
 scene.add(directionalLight);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0, 0);
-controls.update();
-
-let geo;
+if (config.controls) {
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.update();
+  controls.addEventListener("change", onControlsChange);
+}
 
 loader.load(
   // resource URL
@@ -65,7 +109,8 @@ loader.load(
   function (gltf) {
     geo = gltf.scene;
     geo.children[0].material = material;
-    scene.add(geo);
+    (geo.rotation.x = THREE.MathUtils.degToRad(config.initRotX)),
+      scene.add(geo);
 
     //gltf.animations; // Array<THREE.AnimationClip>
     //gltf.scene; // THREE.Group
@@ -73,6 +118,7 @@ loader.load(
     //gltf.cameras; // Array<THREE.Camera>
     //gltf.asset; // Object
     console.log(geo);
+    initGUI();
   },
   // called while loading is progressing
   function (xhr) {
@@ -84,11 +130,10 @@ loader.load(
   }
 );
 
-camera.position.z = 5;
+camera.position.z = config.camZ;
 
 const animate = function () {
   requestAnimationFrame(animate);
-  // s
 
   renderer.render(scene, camera);
 };
