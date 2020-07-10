@@ -9,8 +9,11 @@ import { gsap } from "gsap";
 const config = {
   controls: false,
   gui: true,
-  camZ: 2.5,
-  initRotX: 210, //deg
+  initCamZ: 5,
+  primeCamZ: 2.5,
+  zoomedZ: -1,
+  initRotX: 0, //deg
+  zoomedRotX: 30,
 };
 
 let controls, geo, gui, guiRot;
@@ -79,42 +82,59 @@ const onGuiRotChange = function () {
 
 const initAnims = function () {
   tlGeo = gsap.timeline({
-    repeat: -1,
-    yoyo: true,
+    //repeat: -1,
+    //yoyo: true,
   });
-  tlGeo.to(geo.rotation, { x: THREE.MathUtils.degToRad(90), duration: 1 });
-  tlGeo.to(geo.rotation, { y: THREE.MathUtils.degToRad(90), duration: 1 });
-  tlGeo.to(geo.rotation, { z: THREE.MathUtils.degToRad(360), duration: 1 });
-  tlGeo.to(camera.position, { z: 0, duration: 1 }, "move2");
+
   tlGeo.to(
-    geo.rotation,
-    { z: THREE.MathUtils.degToRad(0), duration: 1 },
-    "move2"
+    camera.position,
+    {
+      z: 3,
+      duration: 5,
+      ease: "none",
+      onComplete: () => {
+        camera.position.z -= 0.5;
+      },
+    },
+    "zoomIn"
   );
   tlGeo.to(
     geo.rotation,
-    { x: THREE.MathUtils.degToRad(0), duration: 1 },
-    "move2"
+    {
+      x: THREE.MathUtils.degToRad(config.zoomedRotX),
+      duration: 5,
+    },
+    "zoomIn"
   );
-  tlGeo.to(
-    geo.rotation,
-    { y: THREE.MathUtils.degToRad(0), duration: 1 },
-    "move2"
-  );
-  tlGeo.to(geo.rotation, { x: THREE.MathUtils.degToRad(90), duration: 1 });
-  tlGeo.to(geo.rotation, { y: THREE.MathUtils.degToRad(90), duration: 1 });
-  tlGeo.to(geo.rotation, { z: THREE.MathUtils.degToRad(360), duration: 1 });
-  tlGeo.to(camera.position, { z: 2.5, duration: 1 });
-  tlGeo.to(geo.rotation, { x: 0, duration: 1 });
-  tlGeo.to(geo.rotation, { y: 0, duration: 1 });
-  tlGeo.to(geo.rotation, { z: 0, duration: 1 });
-  tlGeo.to(camera.position, { z: 2.5, duration: 1 }, "zoomOut");
-  tlGeo.to(
-    geo.rotation,
-    { x: THREE.MathUtils.degToRad(config.initRotX), duration: 1 },
-    "zoomOut"
-  );
-  tlGeo.to(camera.position, { z: -2, duration: 1 }, "zoomThrough");
+  tlGeo.to(camera.position, {
+    z: 1.5,
+    duration: 5,
+    ease: "none",
+    onComplete: () => {
+      camera.position.z -= 0.5;
+    },
+  });
+  tlGeo.to(camera.position, {
+    z: 0,
+    duration: 5,
+  });
+  tlGeo.to(geo.rotation, {
+    x: THREE.MathUtils.degToRad(150),
+    duration: 2,
+  });
+  tlGeo.to(geo.rotation, {
+    y: THREE.MathUtils.degToRad(180),
+    duration: 2,
+  });
+  tlGeo.to(geo.rotation, {
+    z: THREE.MathUtils.degToRad(180),
+    duration: 2,
+  });
+  tlGeo.to(camera.position, {
+    z: -1,
+    duration: 1,
+    ease: "back.in(2)",
+  });
 };
 
 const initGUI = function () {
@@ -123,7 +143,7 @@ const initGUI = function () {
     gui.hide();
   }
   guiRot = {
-    x: 0,
+    x: config.initRotX,
     y: 0,
     z: 0,
   };
@@ -175,7 +195,7 @@ loader.load(
   }
 );
 
-camera.position.z = config.camZ;
+camera.position.z = config.initCamZ;
 
 const animate = function () {
   requestAnimationFrame(animate);
