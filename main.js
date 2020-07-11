@@ -49,7 +49,7 @@ document.body.appendChild(renderer.domElement);
 
 const material = new THREE.MeshStandardMaterial({
   color: 0xffffff,
-  //emissive: 0x000000,
+  emissive: 0xffffff,
   //roughness: 1,
   //metalness: 0.5,
   side: THREE.DoubleSide,
@@ -57,9 +57,11 @@ const material = new THREE.MeshStandardMaterial({
 });
 
 material.color.convertSRGBToLinear();
+material.emissive.convertSRGBToLinear();
 
-//const ambientLight = new THREE.AmbientLight(0x000000);
-//scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0x000000);
+scene.add(ambientLight);
+console.log(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(0, 10, 0);
@@ -80,8 +82,8 @@ const onGuiRotChange = function () {
 
 const initAnims = function () {
   tlGeo = gsap.timeline({
-    repeat: -1,
-    yoyo: false,
+    //repeat: -1,
+    //yoyo: false,
   });
 
   tlGeo.to(
@@ -90,10 +92,14 @@ const initAnims = function () {
       z: 3,
       duration: 5,
       ease: "none",
+      onStart: () => {
+        colorTo(material.emissive, 0xe8e8e8, 5);
+      },
       onComplete: () => {
         camera.position.z -= 0.5;
         scene.background = new THREE.Color(0x000000);
-        //material.emissive = 0xffffff;
+        material.color = new THREE.Color(0xffffff);
+        material.emissive = new THREE.Color(0xcdcdcd);
       },
     },
     "zoomIn"
@@ -107,33 +113,70 @@ const initAnims = function () {
     "zoomIn"
   );
   tlGeo.to(camera.position, {
-    z: 1.5,
+    z: 2,
     duration: 5,
     ease: "none",
     onComplete: () => {
-      camera.position.z -= 0.5;
+      camera.position.z -= 0.25;
+      material.color = new THREE.Color(0xa2a7a2);
+      material.emissive = new THREE.Color(0x373737);
+      ambientLight.color = new THREE.Color(0xf5f5b4);
+      scene.background = new THREE.Color(0x5ca47d);
     },
-  });
-  tlGeo.to(camera.position, {
-    z: 0,
-    duration: 5,
   });
   tlGeo.to(geo.rotation, {
     x: THREE.MathUtils.degToRad(150),
     duration: 2,
+    onComplete: () => {
+      scene.background = new THREE.Color(0xcd6666);
+      material.emissive = new THREE.Color(0x8c3e3e);
+    },
   });
   tlGeo.to(geo.rotation, {
     y: THREE.MathUtils.degToRad(180),
     duration: 2,
+    onComplete: () => {
+      material.color = new THREE.Color(0xfbaf08);
+      material.emissive = new THREE.Color(0x313131);
+      ambientLight.color = new THREE.Color(0xaa9c92);
+      scene.background = new THREE.Color(0x101357);
+    },
   });
   tlGeo.to(geo.rotation, {
     z: THREE.MathUtils.degToRad(180),
     duration: 2,
+    onComplete: () => {
+      material.color = new THREE.Color(0xfb0000);
+      material.emissive = new THREE.Color(0x313131);
+      ambientLight.color = new THREE.Color(0x92a8aa);
+      scene.background = new THREE.Color(0x104657);
+    },
   });
   tlGeo.to(camera.position, {
-    z: -1,
+    z: 2,
     duration: 1,
     ease: "back.in(2)",
+    onStart: () => {
+      scene.background = new THREE.Color(0xc964b6);
+      colorTo(material.color, 0xffe070, 2);
+      colorTo(ambientLight.color, 0xe6ca00, 1);
+      gsap.to(camera.position, {
+        z: -2,
+        duration: 1,
+        delay: 2,
+      });
+      material.emissive = new THREE.Color(0x000000);
+    },
+  });
+};
+
+const colorTo = function (target, value, duration = 1) {
+  let valueHex = new THREE.Color(value);
+  gsap.to(target, {
+    r: valueHex.r,
+    g: valueHex.g,
+    b: valueHex.b,
+    duration: duration,
   });
 };
 
@@ -163,6 +206,14 @@ const initGUI = function () {
   gui
     .addColor(new ColorGUIHelper(material, "emissive"), "value") //
     .name("emissive");
+
+  gui
+    .addColor(new ColorGUIHelper(ambientLight, "color"), "value") //
+    .name("ambient light");
+
+  gui
+    .addColor(new ColorGUIHelper(scene, "background"), "value") //
+    .name("scene bg");
 };
 
 scene.add(directionalLight);
