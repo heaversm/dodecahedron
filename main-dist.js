@@ -127,6 +127,7 @@ dracoLoader.setDecoderPath("THREE/examples/js/libs/draco/");
 loader.setDRACOLoader(dracoLoader);
 
 const scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xffffff);
 const camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](
   75,
   window.innerWidth / window.innerHeight,
@@ -134,7 +135,7 @@ const camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](
   1000
 );
 
-const renderer = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
+const renderer = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: false });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
@@ -145,25 +146,22 @@ document.body.appendChild(renderer.domElement);
 // scene.add(cube);
 
 const material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshStandardMaterial"]({
-  color: 0x2194ce,
-  emissive: 0x000,
-  roughness: 1,
+  color: 0xffffff,
+  //emissive: 0x000000,
+  //roughness: 1,
   //metalness: 0.5,
   side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"],
+  flatShading: true,
 });
+
+material.color.convertSRGBToLinear();
 
 //const ambientLight = new THREE.AmbientLight(0x000000);
 //scene.add(ambientLight);
 
-const directionalLight = new three__WEBPACK_IMPORTED_MODULE_0__["DirectionalLight"](0xffffff, 0.5);
+const directionalLight = new three__WEBPACK_IMPORTED_MODULE_0__["DirectionalLight"](0xffffff, 1);
 directionalLight.position.set(0, 10, 0);
-directionalLight.castShadow = true;
-directionalLight.add(
-  new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](
-    new three__WEBPACK_IMPORTED_MODULE_0__["SphereBufferGeometry"](0.5),
-    new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ color: 0xffffff })
-  )
-);
+directionalLight.castShadow = false;
 
 const onControlsChange = function () {
   console.log(controls.getAzimuthalAngle(), controls.getPolarAngle());
@@ -180,8 +178,8 @@ const onGuiRotChange = function () {
 
 const initAnims = function () {
   tlGeo = gsap__WEBPACK_IMPORTED_MODULE_5__["gsap"].timeline({
-    //repeat: -1,
-    //yoyo: true,
+    repeat: -1,
+    yoyo: false,
   });
 
   tlGeo.to(
@@ -192,6 +190,8 @@ const initAnims = function () {
       ease: "none",
       onComplete: () => {
         camera.position.z -= 0.5;
+        scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x000000);
+        //material.emissive = 0xffffff;
       },
     },
     "zoomIn"
@@ -253,6 +253,14 @@ const initGUI = function () {
   guiRotZ.onChange(onGuiRotChange);
 
   gui.add(camera.position, "z", -2, 5).name("cam z");
+
+  //gui.add(material);
+  gui
+    .addColor(new ColorGUIHelper(material, "color"), "value") //
+    .name("color");
+  gui
+    .addColor(new ColorGUIHelper(material, "emissive"), "value") //
+    .name("emissive");
 };
 
 scene.add(directionalLight);
@@ -302,6 +310,19 @@ const animate = function () {
 };
 
 animate();
+
+class ColorGUIHelper {
+  constructor(object, prop) {
+    this.object = object;
+    this.prop = prop;
+  }
+  get value() {
+    return `#${this.object[this.prop].getHexString()}`;
+  }
+  set value(hexString) {
+    this.object[this.prop].set(hexString);
+  }
+}
 
 
 /***/ }),
