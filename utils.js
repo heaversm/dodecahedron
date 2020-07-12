@@ -1,6 +1,6 @@
 const pixelRatio = 2;
 let canvas, ctx;
-let renderer, stage;
+let pixiRenderer, stage;
 let sw = document.body.clientWidth;
 let sh = document.body.clientHeight;
 
@@ -25,7 +25,7 @@ function canvasResize() {
 }
 
 function generatePixi(bgcolor, pixiContainer = "body") {
-  renderer = new PIXI.Renderer({
+  pixiRenderer = new PIXI.Renderer({
     width: sw,
     height: sh,
     antialias: true,
@@ -35,7 +35,7 @@ function generatePixi(bgcolor, pixiContainer = "body") {
     powerPreference: "high-performance",
     //backgroundColor: bgcolor
   });
-  document.querySelector(pixiContainer).appendChild(renderer.view);
+  document.querySelector(pixiContainer).appendChild(pixiRenderer.view);
   stage = new PIXI.Container();
 
   window.addEventListener("resize", pixiResize, false);
@@ -46,7 +46,7 @@ function pixiResize() {
   sw = document.body.clientWidth;
   sh = document.body.clientHeight;
 
-  renderer.resize(sw, sh);
+  pixiRenderer.resize(sw, sh);
 }
 
 function getSize(size) {
