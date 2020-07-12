@@ -3,7 +3,6 @@ import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
-
 import { gsap } from "gsap";
 
 const config = {
@@ -100,6 +99,7 @@ const initAnims = function () {
         scene.background = new THREE.Color(0x000000);
         material.color = new THREE.Color(0xffffff);
         material.emissive = new THREE.Color(0xcdcdcd);
+        //switchToWhiteText();
       },
     },
     "zoomIn"

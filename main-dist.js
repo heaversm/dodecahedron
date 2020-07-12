@@ -103,7 +103,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 const config = {
   controls: false,
   gui: true,
@@ -198,6 +197,7 @@ const initAnims = function () {
         scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x000000);
         material.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xffffff);
         material.emissive = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xcdcdcd);
+        //switchToWhiteText();
       },
     },
     "zoomIn"
