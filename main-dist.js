@@ -219,7 +219,8 @@ const initAnims = function () {
       material.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xa2a7a2);
       material.emissive = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x373737);
       ambientLight.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xf5f5b4);
-      scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x5ca47d);
+      //scene.background = new THREE.Color(0x5ca47d);
+      colorTo(scene.background, 0x5ca47d, 1);
     },
   });
   tlGeo.to(geo.rotation, {
@@ -237,7 +238,8 @@ const initAnims = function () {
       material.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xfbaf08);
       material.emissive = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x313131);
       ambientLight.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xaa9c92);
-      scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x101357);
+      //scene.background = new THREE.Color(0x101357);
+      colorTo(scene.background, 0x101357, 1);
     },
   });
   tlGeo.to(geo.rotation, {
@@ -247,7 +249,8 @@ const initAnims = function () {
       material.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xfb0000);
       material.emissive = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x313131);
       ambientLight.color = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x92a8aa);
-      scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x104657);
+      // scene.background = new THREE.Color(0x104657);
+      colorTo(scene.background, 0x104657, 1);
     },
   });
   tlGeo.to(camera.position, {
@@ -255,16 +258,19 @@ const initAnims = function () {
     duration: 1,
     ease: "back.in(2)",
     onStart: () => {
-      scene.background = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0xc964b6);
+      colorTo(scene.background, 0xc964b6, 1);
+      //scene.background = new THREE.Color(0xc964b6);
       colorTo(material.color, 0xffe070, 2);
       colorTo(ambientLight.color, 0xe6ca00, 1);
-      gsap__WEBPACK_IMPORTED_MODULE_5__["gsap"].to(camera.position, {
-        z: -2,
-        duration: 1,
-        delay: 2,
-      });
       material.emissive = new three__WEBPACK_IMPORTED_MODULE_0__["Color"](0x000000);
     },
+  });
+  tlGeo.to(camera.position, {
+    onStart: () => {
+      colorTo(scene.background, 0x0000000, 1);
+    },
+    z: -2,
+    duration: 1,
   });
 };
 
