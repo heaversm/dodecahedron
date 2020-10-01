@@ -105,12 +105,7 @@ const randomIntFromInterval = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
-const initMorphAnims = function () {
-  const index = randomIntFromInterval(
-    0,
-    dodec.morphTargetInfluences.length - 1
-  );
-
+const doMorphAnim = function (index) {
   const animObj = {
     value: dodec.morphTargetInfluences[index],
   };
@@ -121,6 +116,7 @@ const initMorphAnims = function () {
     duration: randomIntFromInterval(0, 5),
     value: doIncrement ? 1 : 0,
     delay: Math.random(),
+    ease: "expo.inOut",
     onUpdate: function (thisIndex, doIncrement) {
       if (doIncrement) {
         dodec.morphTargetInfluences[thisIndex] = this.progress();
@@ -128,8 +124,19 @@ const initMorphAnims = function () {
         dodec.morphTargetInfluences[thisIndex] = 1 - this.progress();
       }
     },
-    onComplete: initMorphAnims,
     onUpdateParams: [index, doIncrement],
+    onComplete: function (index) {
+      setTimeout(() => {
+        doMorphAnim(index);
+      }, 1000);
+    },
+    onCompleteParams: [index],
+  });
+};
+
+const initMorphAnims = function () {
+  dodec.morphTargetInfluences.forEach((influence, index) => {
+    doMorphAnim(index);
   });
 };
 
@@ -249,7 +256,7 @@ loader.load(
     dodec = scene.getObjectByName("Solid");
     dodec.material = material; //MH - wrong child?
     initGUI();
-    initMorphAnims();
+    setTimeout(initMorphAnims, 5000);
   },
   // called while loading is progressing
   function (xhr) {
