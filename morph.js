@@ -7,7 +7,7 @@ import * as dat from "dat.gui";
 import { gsap } from "gsap";
 
 const config = {
-  controls: true,
+  controls: false,
   gui: true,
   initCamZ: 5,
   primeCamZ: 2.5,
@@ -30,7 +30,7 @@ const params = {
 
 let controls, geo, gui, guiRot, dodec;
 
-let tlGeo;
+let tlGeo, tlCam; //tweens
 
 // Instantiate a loader
 const loader = new GLTFLoader();
@@ -130,6 +130,15 @@ const initMorphAnims = function () {
     });
     doMorphAnim(i);
   }
+  console.log(dodec.position);
+  tlCam = gsap.to(camera.position, {
+    z: 2.5,
+    duration: 0.5,
+    repeatDelay: 0.5,
+    ease: "back.inOut(1.7)",
+    yoyo: true,
+    repeat: -1,
+  });
 };
 
 const initGUI = function () {
@@ -226,6 +235,7 @@ if (config.controls) {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0, 0);
   controls.autoRotate = true;
+  controls.autoRotateSpeed = 6;
   controls.update();
   controls.addEventListener("change", onControlsChange);
 }
@@ -264,7 +274,12 @@ camera.position.z = config.initCamZ;
 
 const animate = function () {
   requestAnimationFrame(animate);
-  controls.update();
+  if (dodec) {
+    dodec.rotation.y -= 0.005;
+  }
+  if (config.controls) {
+    controls.update();
+  }
   renderer.render(scene, camera);
 };
 
