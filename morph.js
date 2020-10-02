@@ -105,39 +105,31 @@ const randomIntFromInterval = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
+const animObjects = [];
+
 const doMorphAnim = function (index) {
-  const animObj = {
-    value: dodec.morphTargetInfluences[index],
-  };
-
-  const doIncrement = animObj.value === 0;
-
-  gsap.to(animObj, {
+  const thisAnimObj = animObjects[index];
+  thisAnimObj.tween = gsap.to(thisAnimObj, {
     duration: randomIntFromInterval(0, 5),
-    value: doIncrement ? 1 : 0,
-    delay: Math.random(),
+    value: 1,
     ease: "expo.inOut",
-    onUpdate: function (thisIndex, doIncrement) {
-      if (doIncrement) {
-        dodec.morphTargetInfluences[thisIndex] = this.progress();
-      } else {
-        dodec.morphTargetInfluences[thisIndex] = 1 - this.progress();
-      }
+    onUpdate: function (thisIndex) {
+      dodec.morphTargetInfluences[thisIndex] = this.progress();
     },
-    onUpdateParams: [index, doIncrement],
-    onComplete: function (index) {
-      setTimeout(() => {
-        doMorphAnim(index);
-      }, 1000);
-    },
-    onCompleteParams: [index],
+    onUpdateParams: [index],
+    yoyo: true,
+    repeat: -1,
   });
 };
 
 const initMorphAnims = function () {
-  dodec.morphTargetInfluences.forEach((influence, index) => {
-    doMorphAnim(index);
-  });
+  for (let i = 0; i < dodec.morphTargetInfluences.length; i++) {
+    animObjects.push({
+      value: 0,
+      tween: null,
+    });
+    doMorphAnim(i);
+  }
 };
 
 const initGUI = function () {
