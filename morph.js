@@ -35,12 +35,12 @@ clipPlanes.forEach((clipPlane) => {
 });
 const sphereGroup = new THREE.Group();
 let sphereColors = [
-  0x7aefa9,
-  0xff7e00,
   0x00ffae,
   0xff0066,
-  0x7aefa9,
-  0xff7e00,
+  0x00ffae,
+  0xff0066,
+  0x00ffae,
+  0xff0066,
   0x00ffae,
   0xff0066,
 ];
@@ -126,12 +126,11 @@ const initMorphAnims = function () {
   }
   for (let j = 0; j < clipPlanes.length; j++) {
     gsap.to(clipPlanes[j], {
-      duration: 1,
+      duration: 0.5,
       constant: 0,
       yoyo: true,
       repeat: -1,
-      repeatDelay: 1,
-      delay: 1,
+      repeatDelay: 0.5,
     });
   }
 
@@ -180,9 +179,6 @@ const initSphere = function () {
     });
 
     const sphereMesh = new THREE.Mesh(geometry, material);
-    if (i == sphereCount) {
-      console.log(sphereMesh);
-    }
     sphereMesh.rotation.y = THREE.MathUtils.degToRad(90);
     sphereGroup.add(sphereMesh);
   }
@@ -209,7 +205,6 @@ loader.load(
     //gltf.scenes; // Array<THREE.Group>
     //gltf.cameras; // Array<THREE.Camera>
     //gltf.asset; // Object
-    console.log(geo);
     dodec = scene.getObjectByName("Solid");
     dodec.material = material;
     setTimeout(initMorphAnims, 5000);
