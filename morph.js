@@ -1,63 +1,72 @@
 import * as THREE from "three";
 import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
-import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
-import * as dat from "dat.gui";
 
 import { gsap } from "gsap";
 
-const config = {
-  controls: false,
-  gui: true,
-  initCamZ: 5,
-  primeCamZ: 2.5,
-  zoomedZ: -1,
-  initRotX: 0, //deg
-  zoomedRotX: 30,
+let geo, dodec;
+let tlCam, tlColor; //tweens
+const animObjects = [];
+const colorArray = [
+  "#ff99",
+  "#ff9900",
+  "#ff6153",
+  "#ff9",
+  "#ff9990",
+  "#ff5353",
+  "#ffc14a",
+  "#791111",
+];
+let curColor;
+
+const clipParams = {
+  clipIntersection: true,
+  planeConstant: 0.5,
+  showHelpers: false,
 };
 
-const params = {
-  //morph targets
-  influence1: 0,
-  influence2: 0,
-  influence3: 0,
-  influence4: 0,
-  influence5: 0,
-  influence6: 0,
-  influence7: 0,
-  influence8: 0,
-};
+const clipPlanes = [
+  new THREE.Plane(new THREE.Vector3(1, 0, 0), 0),
+  new THREE.Plane(new THREE.Vector3(0, -1, 0), 0),
+  new THREE.Plane(new THREE.Vector3(0, 0, -1), 0),
+];
+clipPlanes.forEach((clipPlane) => {
+  clipPlane.constant = 0.5;
+});
+const sphereGroup = new THREE.Group();
+let sphereColors = [
+  0x7aefa9,
+  0xff7e00,
+  0x00ffae,
+  0xff0066,
+  0x7aefa9,
+  0xff7e00,
+  0x00ffae,
+  0xff0066,
+];
 
-let controls, geo, gui, guiRot, dodec;
-
-let tlGeo, tlCam; //tweens
-
-// Instantiate a loader
 const loader = new GLTFLoader();
-
-// Optional: Provide a DRACOLoader instance to decode compressed mesh data
+// Provide a DRACOLoader instance to decode compressed mesh data
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("THREE/examples/js/libs/draco/");
 loader.setDRACOLoader(dracoLoader);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+//scene.background = new THREE.Color(0xffffff);
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
+camera.position.set(0, 0, 5.0);
 
-const renderer = new THREE.WebGLRenderer({ alpha: false });
+const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.localClippingEnabled = true;
 
 document.body.appendChild(renderer.domElement);
-
-// const geometry = new THREE.BoxGeometry();
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-// const cube = new THREE.Mesh(geometry, material);
-// scene.add(cube);
 
 const material = new THREE.MeshStandardMaterial({
   color: 0xffa400,
@@ -76,19 +85,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = false;
-
-const onControlsChange = function () {
-  //console.log(controls.getAzimuthalAngle(), controls.getPolarAngle());
-};
-
-const onGuiRotChange = function () {
-  const { x, y, z } = guiRot;
-  geo.rotation.set(
-    THREE.MathUtils.degToRad(x),
-    THREE.MathUtils.degToRad(y),
-    THREE.MathUtils.degToRad(z)
-  );
-};
+scene.add(directionalLight);
 
 const colorTo = function (target, value, duration = 1) {
   let valueHex = new THREE.Color(value);
@@ -101,11 +98,8 @@ const colorTo = function (target, value, duration = 1) {
 };
 
 const randomIntFromInterval = function (min, max) {
-  // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
-
-const animObjects = [];
 
 const doMorphAnim = function (index) {
   const thisAnimObj = animObjects[index];
@@ -130,115 +124,76 @@ const initMorphAnims = function () {
     });
     doMorphAnim(i);
   }
-  console.log(dodec.position);
+  for (let j = 0; j < clipPlanes.length; j++) {
+    gsap.to(clipPlanes[j], {
+      duration: 1,
+      constant: 0,
+      yoyo: true,
+      repeat: -1,
+      repeatDelay: 1,
+      delay: 1,
+    });
+  }
+
   tlCam = gsap.to(camera.position, {
-    z: 2.5,
+    z: 3.5,
     duration: 0.5,
     repeatDelay: 0.5,
     ease: "back.inOut(1.7)",
     yoyo: true,
     repeat: -1,
   });
+
+  tlColor = gsap.to(".morph", {
+    backgroundColor: () => colorArray[curColor],
+    duration: 0.5,
+    repeatDelay: 0.5,
+    repeat: -1,
+    ease: "back.inOut(1.7)",
+    repeatRefresh: true,
+    onRepeat: () => {
+      if (curColor < colorArray.length - 1) {
+        curColor++;
+      } else {
+        curColor = 0;
+      }
+    },
+  });
 };
 
-const initGUI = function () {
-  gui = new dat.GUI();
-  if (!config.gui) {
-    gui.hide();
+const initSphere = function () {
+  const sphereCount = 14;
+  for (let i = 1; i <= sphereCount; i += 2) {
+    let geometry = new THREE.SphereBufferGeometry(
+      (i / sphereCount) * 0.25,
+      48,
+      24
+    );
+
+    const colorIndex = Math.ceil(i / 2);
+
+    let material = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(sphereColors[colorIndex]),
+      side: THREE.DoubleSide,
+      clippingPlanes: clipPlanes,
+      clipIntersection: clipParams.clipIntersection,
+    });
+
+    const sphereMesh = new THREE.Mesh(geometry, material);
+    if (i == sphereCount) {
+      console.log(sphereMesh);
+    }
+    sphereMesh.rotation.y = THREE.MathUtils.degToRad(90);
+    sphereGroup.add(sphereMesh);
   }
-  guiRot = {
-    x: config.initRotX,
-    y: 0,
-    z: 0,
-  };
-  const guiRotX = gui.add(guiRot, "x", 0, 359);
-  guiRotX.onChange(onGuiRotChange);
-  const guiRotY = gui.add(guiRot, "y", 0, 359);
-  guiRotY.onChange(onGuiRotChange);
-  const guiRotZ = gui.add(guiRot, "z", 0, 359);
-  guiRotZ.onChange(onGuiRotChange);
+  scene.add(sphereGroup);
 
-  gui.add(camera.position, "z", -2, 5).name("cam z");
-
-  //gui.add(material);
-  gui
-    .addColor(new ColorGUIHelper(material, "color"), "value") //
-    .name("color");
-  gui
-    .addColor(new ColorGUIHelper(material, "emissive"), "value") //
-    .name("emissive");
-
-  gui
-    .addColor(new ColorGUIHelper(ambientLight, "color"), "value") //
-    .name("ambient light");
-
-  gui
-    .addColor(new ColorGUIHelper(scene, "background"), "value") //
-    .name("scene bg");
-
-  var folder = gui.addFolder("Morph Targets");
-  folder
-    .add(params, "influence1", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[0] = value;
-    });
-  folder
-    .add(params, "influence2", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      console.log(dodec.morphTargetInfluences[1]);
-      dodec.morphTargetInfluences[1] = value;
-      //dodec.updateMorphTargets();
-    });
-  folder
-    .add(params, "influence3", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[2] = value;
-    });
-  folder
-    .add(params, "influence4", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[3] = value;
-    });
-  folder
-    .add(params, "influence5", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[4] = value;
-    });
-  folder
-    .add(params, "influence6", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[5] = value;
-    });
-  folder
-    .add(params, "influence7", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[6] = value;
-    });
-  folder
-    .add(params, "influence8", 0, 1)
-    .step(0.01)
-    .onChange(function (value) {
-      dodec.morphTargetInfluences[7] = value;
-    });
+  var light = new THREE.HemisphereLight(0xffffff, 0x080808, 1.5);
+  light.position.set(-1.25, 1, 1.25);
+  scene.add(light);
 };
 
-scene.add(directionalLight);
-
-if (config.controls) {
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0, 0);
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 6;
-  controls.update();
-  controls.addEventListener("change", onControlsChange);
-}
+initSphere();
 
 loader.load(
   // resource URL
@@ -246,8 +201,8 @@ loader.load(
   // called when the resource is loaded
   function (gltf) {
     geo = gltf.scene;
-    (geo.rotation.x = THREE.MathUtils.degToRad(config.initRotX)),
-      scene.add(geo);
+
+    scene.add(geo);
 
     //gltf.animations; // Array<THREE.AnimationClip>
     //gltf.scene; // THREE.Group
@@ -256,8 +211,7 @@ loader.load(
     //gltf.asset; // Object
     console.log(geo);
     dodec = scene.getObjectByName("Solid");
-    dodec.material = material; //MH - wrong child?
-    initGUI();
+    dodec.material = material;
     setTimeout(initMorphAnims, 5000);
   },
   // called while loading is progressing
@@ -270,30 +224,12 @@ loader.load(
   }
 );
 
-camera.position.z = config.initCamZ;
-
 const animate = function () {
   requestAnimationFrame(animate);
   if (dodec) {
-    dodec.rotation.y -= 0.005;
-  }
-  if (config.controls) {
-    controls.update();
+    dodec.rotation.y -= 0.01;
   }
   renderer.render(scene, camera);
 };
 
 animate();
-
-class ColorGUIHelper {
-  constructor(object, prop) {
-    this.object = object;
-    this.prop = prop;
-  }
-  get value() {
-    return `#${this.object[this.prop].getHexString()}`;
-  }
-  set value(hexString) {
-    this.object[this.prop].set(hexString);
-  }
-}
