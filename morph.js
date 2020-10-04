@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
-import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
 import { gsap } from "gsap";
 
 let geo, dodec;
@@ -90,12 +89,6 @@ directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = false;
 scene.add(directionalLight);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0, 0);
-controls.autoRotate = true;
-controls.autoRotateSpeed = 6;
-controls.update();
-
 const colorTo = function (target, value, duration = 1) {
   let valueHex = new THREE.Color(value);
   gsap.to(target, {
@@ -144,7 +137,7 @@ const initMorphAnims = function () {
   }
 
   tlCam = gsap.to(camera.position, {
-    z: 3.5,
+    z: 1.5,
     duration: 0.5,
     repeatDelay: 0.5,
     ease: "back.inOut(1.7)",
@@ -284,7 +277,6 @@ const animate = function () {
   if (dodec) {
     dodec.rotation.y -= 0.01;
   }
-  controls.update();
   renderer.render(scene, camera);
 };
 
