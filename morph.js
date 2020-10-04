@@ -17,6 +17,9 @@ const colorArray = [
   "#ffc14a",
   "#791111",
 ];
+
+const circleArray = colorArray.reverse();
+
 let curColor;
 
 const clipParams = {
@@ -157,6 +160,47 @@ const initMorphAnims = function () {
         curColor = 0;
       }
     },
+  });
+
+  gsap.to(".circle", {
+    backgroundColor: () => circleArray[curColor],
+    duration: 0.5,
+    repeatDelay: 0.5,
+    repeat: -1,
+    ease: "back.inOut(1.7)",
+    repeatRefresh: true,
+    onRepeat: () => {
+      if (curColor < colorArray.length - 1) {
+        curColor++;
+      } else {
+        curColor = 0;
+      }
+    },
+  });
+
+  gsap.to(".circle", {
+    backgroundColor: () => circleArray[curColor],
+    duration: 0.5,
+    repeatDelay: 0.5,
+    repeat: -1,
+    ease: "back.inOut(1.7)",
+    repeatRefresh: true,
+    onRepeat: () => {
+      if (curColor < colorArray.length - 1) {
+        curColor++;
+      } else {
+        curColor = 0;
+      }
+    },
+  });
+  gsap.to(".circle-container", {
+    scale: 0.75,
+    duration: 0.5,
+    repeatDelay: 0.5,
+    repeat: -1,
+    yoyo: true,
+    ease: "back.inOut(1.7)",
+    repeatRefresh: true,
   });
 };
 
