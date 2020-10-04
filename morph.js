@@ -96,6 +96,8 @@ const onControlsChange = function () {
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, 0);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 6;
 controls.update();
 controls.addEventListener("change", onControlsChange);
 
