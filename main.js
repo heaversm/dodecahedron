@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 
 const config = {
   controls: false,
-  gui: true,
+  gui: false,
   initCamZ: 5,
   primeCamZ: 2.5,
   zoomedZ: -1,
