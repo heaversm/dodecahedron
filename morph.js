@@ -90,16 +90,11 @@ directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = false;
 scene.add(directionalLight);
 
-const onControlsChange = function () {
-  console.log(controls, controls.getAzimuthalAngle(), controls.getPolarAngle());
-};
-
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, 0);
 controls.autoRotate = true;
 controls.autoRotateSpeed = 6;
 controls.update();
-controls.addEventListener("change", onControlsChange);
 
 const colorTo = function (target, value, duration = 1) {
   let valueHex = new THREE.Color(value);
@@ -215,6 +210,15 @@ const initMorphAnims = function () {
   });
 };
 
+const onClick = function () {
+  document.querySelector(".music").play();
+};
+
+const initMusic = function () {
+  document.querySelector(".morph").addEventListener("click", onClick);
+  document.querySelector(".play-container").addEventListener("click", onClick);
+};
+
 const initSphere = function () {
   const sphereCount = 14;
   for (let i = 1; i <= sphereCount; i += 2) {
@@ -245,6 +249,7 @@ const initSphere = function () {
 };
 
 initSphere();
+initMusic();
 
 loader.load(
   // resource URL
