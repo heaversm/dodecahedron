@@ -1,25 +1,29 @@
 import * as THREE from "three";
 import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
+import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
+import * as dat from "dat.gui";
 import { gsap } from "gsap";
 
-let geo, dodec;
-let tlCam, tlColor; //tweens
-const animObjects = [];
-const colorArray = [
-  "#ff99",
-  "#ff9900",
-  "#ff6153",
-  "#ff9",
-  "#ff9990",
-  "#ff5353",
-  "#ffc14a",
-  "#791111",
-];
+const config = {
+  controls: true,
+  gui: true,
+  initRotX: 0, //deg
+};
 
-const circleArray = colorArray.reverse();
+const params = {
+  //morph targets
+  influence1: 0,
+  influence2: 0,
+  influence3: 0,
+  influence4: 0,
+  influence5: 0,
+  influence6: 0,
+  influence7: 0,
+  influence8: 0,
+};
 
-let curColor;
+let controls, geo, gui, guiRot, dodec;
 
 const clipParams = {
   clipIntersection: true,
@@ -46,6 +50,9 @@ let sphereColors = [
   0x00ffae,
   0xff0066,
 ];
+
+const $bg = document.querySelector("body");
+const $circle = document.querySelector(".circle");
 
 const loader = new GLTFLoader();
 // Provide a DRACOLoader instance to decode compressed mesh data
@@ -89,6 +96,14 @@ directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = false;
 scene.add(directionalLight);
 
+if (config.controls) {
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 6;
+  controls.update();
+}
+
 const colorTo = function (target, value, duration = 1) {
   let valueHex = new THREE.Color(value);
   gsap.to(target, {
@@ -99,117 +114,108 @@ const colorTo = function (target, value, duration = 1) {
   });
 };
 
-const randomIntFromInterval = function (min, max) {
-  return Math.floor(Math.random() * (max - min + 1) + min);
+const onGuiRotChange = function () {
+  const { x, y, z } = guiRot;
+  geo.rotation.set(
+    THREE.MathUtils.degToRad(x),
+    THREE.MathUtils.degToRad(y),
+    THREE.MathUtils.degToRad(z)
+  );
 };
 
-const doMorphAnim = function (index) {
-  const thisAnimObj = animObjects[index];
-  thisAnimObj.tween = gsap.to(thisAnimObj, {
-    duration: randomIntFromInterval(0, 5),
-    value: 1,
-    ease: "expo.inOut",
-    onUpdate: function (thisIndex) {
-      dodec.morphTargetInfluences[thisIndex] = this.progress();
-    },
-    onUpdateParams: [index],
-    yoyo: true,
-    repeat: -1,
-  });
-};
+const initGUI = function () {
+  gui = new dat.GUI();
 
-const initMorphAnims = function () {
-  for (let i = 0; i < dodec.morphTargetInfluences.length; i++) {
-    animObjects.push({
-      value: 0,
-      tween: null,
+  guiRot = {
+    x: config.initRotX,
+    y: 0,
+    z: 0,
+  };
+  const posFolder = gui.addFolder("Positioning");
+  const guiRotX = posFolder.add(guiRot, "x", 0, 359);
+  guiRotX.onChange(onGuiRotChange);
+  const guiRotY = posFolder.add(guiRot, "y", 0, 359);
+  guiRotY.onChange(onGuiRotChange);
+  const guiRotZ = posFolder.add(guiRot, "z", 0, 359);
+  guiRotZ.onChange(onGuiRotChange);
+
+  posFolder.add(camera.position, "z", -2, 5).name("cam z");
+
+  //gui.add(material);
+  const colorFolder = gui.addFolder("Color");
+  colorFolder
+    .addColor(new ColorGUIHelper(material, "color"), "value") //
+    .name("color");
+  colorFolder
+    .addColor(new ColorGUIHelper(material, "emissive"), "value") //
+    .name("emissive");
+
+  colorFolder
+    .addColor(new ColorGUIHelper(ambientLight, "color"), "value") //
+    .name("ambient light");
+
+  colorFolder.addColor($bg.style, "backgroundColor").name("scene bg");
+  colorFolder.addColor($circle.style, "backgroundColor").name("circle");
+  gui
+    .add(clipParams, "planeConstant", -1, 1)
+    .step(0.01)
+    .name("plane constant")
+    .onChange((value) => {
+      for (var j = 0; j < clipPlanes.length; j++) {
+        clipPlanes[j].constant = value;
+      }
+      render();
     });
-    doMorphAnim(i);
-  }
-  for (let j = 0; j < clipPlanes.length; j++) {
-    gsap.to(clipPlanes[j], {
-      duration: 0.5,
-      constant: 0,
-      yoyo: true,
-      repeat: -1,
-      repeatDelay: 0.5,
+
+  const morphFolder = gui.addFolder("Morph Targets");
+  morphFolder
+    .add(params, "influence1", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[0] = value;
     });
-  }
-
-  tlCam = gsap.to(camera.position, {
-    z: 1.5,
-    duration: 0.5,
-    repeatDelay: 0.5,
-    ease: "back.inOut(1.7)",
-    yoyo: true,
-    repeat: -1,
-  });
-
-  tlColor = gsap.to(".morph", {
-    backgroundColor: () => colorArray[curColor],
-    duration: 0.5,
-    repeatDelay: 0.5,
-    repeat: -1,
-    ease: "back.inOut(1.7)",
-    repeatRefresh: true,
-    onRepeat: () => {
-      if (curColor < colorArray.length - 1) {
-        curColor++;
-      } else {
-        curColor = 0;
-      }
-    },
-  });
-
-  gsap.to(".circle", {
-    backgroundColor: () => circleArray[curColor],
-    duration: 0.5,
-    repeatDelay: 0.5,
-    repeat: -1,
-    ease: "back.inOut(1.7)",
-    repeatRefresh: true,
-    onRepeat: () => {
-      if (curColor < colorArray.length - 1) {
-        curColor++;
-      } else {
-        curColor = 0;
-      }
-    },
-  });
-
-  gsap.to(".circle", {
-    backgroundColor: () => circleArray[curColor],
-    duration: 0.5,
-    repeatDelay: 0.5,
-    repeat: -1,
-    ease: "back.inOut(1.7)",
-    repeatRefresh: true,
-    onRepeat: () => {
-      if (curColor < colorArray.length - 1) {
-        curColor++;
-      } else {
-        curColor = 0;
-      }
-    },
-  });
-  gsap.to(".circle-container", {
-    scale: 0.75,
-    duration: 0.5,
-    repeatDelay: 0.5,
-    repeat: -1,
-    yoyo: true,
-    ease: "back.inOut(1.7)",
-    repeatRefresh: true,
-  });
-};
-
-const onClick = function () {
-  document.querySelector(".music").play();
-};
-
-const initMusic = function () {
-  document.querySelector(".morph").addEventListener("click", onClick);
-  document.querySelector(".play-container").addEventListener("click", onClick);
+  morphFolder
+    .add(params, "influence2", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[1] = value;
+    });
+  morphFolder
+    .add(params, "influence3", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[2] = value;
+    });
+  morphFolder
+    .add(params, "influence4", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[3] = value;
+    });
+  morphFolder
+    .add(params, "influence5", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[4] = value;
+    });
+  morphFolder
+    .add(params, "influence6", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[5] = value;
+    });
+  morphFolder
+    .add(params, "influence7", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[6] = value;
+    });
+  morphFolder
+    .add(params, "influence8", 0, 1)
+    .step(0.01)
+    .onChange(function (value) {
+      dodec.morphTargetInfluences[7] = value;
+    });
 };
 
 const initSphere = function () {
@@ -242,7 +248,12 @@ const initSphere = function () {
 };
 
 initSphere();
-initMusic();
+
+setTimeout(() => {
+  if (config && config.gui) {
+    initGUI();
+  }
+}, 5000);
 
 loader.load(
   // resource URL
@@ -250,23 +261,13 @@ loader.load(
   // called when the resource is loaded
   function (gltf) {
     geo = gltf.scene;
-
     scene.add(geo);
-
-    //gltf.animations; // Array<THREE.AnimationClip>
-    //gltf.scene; // THREE.Group
-    //gltf.scenes; // Array<THREE.Group>
-    //gltf.cameras; // Array<THREE.Camera>
-    //gltf.asset; // Object
     dodec = scene.getObjectByName("Solid");
     dodec.material = material;
-    setTimeout(initMorphAnims, 5000);
   },
-  // called while loading is progressing
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
   },
-  // called when loading has errors
   function (error) {
     console.log("An error happened");
   }
@@ -274,10 +275,23 @@ loader.load(
 
 const animate = function () {
   requestAnimationFrame(animate);
-  if (dodec) {
-    dodec.rotation.y -= 0.01;
+  if (controls) {
+    controls.update();
   }
-  renderer.render(scene, camera);
+  renderer && renderer.render(scene, camera);
 };
 
 animate();
+
+class ColorGUIHelper {
+  constructor(object, prop) {
+    this.object = object;
+    this.prop = prop;
+  }
+  get value() {
+    return `#${this.object[this.prop].getHexString()}`;
+  }
+  set value(hexString) {
+    this.object[this.prop].set(hexString);
+  }
+}
