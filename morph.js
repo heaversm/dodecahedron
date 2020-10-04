@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "THREE/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "THREE/examples/jsm/loaders/DRACOLoader";
-
+import { OrbitControls } from "THREE/examples/jsm/controls/OrbitControls.js";
 import { gsap } from "gsap";
 
 let geo, dodec;
@@ -89,6 +89,15 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = false;
 scene.add(directionalLight);
+
+const onControlsChange = function () {
+  console.log(controls, controls.getAzimuthalAngle(), controls.getPolarAngle());
+};
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.update();
+controls.addEventListener("change", onControlsChange);
 
 const colorTo = function (target, value, duration = 1) {
   let valueHex = new THREE.Color(value);
@@ -268,6 +277,7 @@ const animate = function () {
   if (dodec) {
     dodec.rotation.y -= 0.01;
   }
+  controls.update();
   renderer.render(scene, camera);
 };
 
