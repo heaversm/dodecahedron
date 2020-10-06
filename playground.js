@@ -27,7 +27,7 @@ let controls, geo, gui, guiRot, dodec;
 
 const clipParams = {
   clipIntersection: true,
-  planeConstant: 0.5,
+  planeConstant: 0,
   showHelpers: false,
 };
 
@@ -37,7 +37,7 @@ const clipPlanes = [
   new THREE.Plane(new THREE.Vector3(0, 0, -1), 0),
 ];
 clipPlanes.forEach((clipPlane) => {
-  clipPlane.constant = 0.5;
+  clipPlane.constant = clipParams.planeConstant;
 });
 const sphereGroup = new THREE.Group();
 let sphereColors = [
@@ -68,7 +68,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 0, 5.0);
+camera.position.set(0, 0, 3.0);
 
 const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -164,7 +164,6 @@ const initGUI = function () {
       for (var j = 0; j < clipPlanes.length; j++) {
         clipPlanes[j].constant = value;
       }
-      render();
     });
 
   const morphFolder = gui.addFolder("Morph Targets");
